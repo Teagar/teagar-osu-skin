@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "showcase"
 SIZE = (1600, 900)
+OUTPUT_SIZE = (1920, 1080)
 CYAN = "#00baff"
 GREEN = "#00ff90"
 INK = "#071018"
@@ -49,6 +50,11 @@ def paste_center(canvas, image, center):
     canvas.alpha_composite(
         image, (round(center[0] - image.width / 2), round(center[1] - image.height / 2))
     )
+
+
+def save_preview(canvas, filename, **kwargs):
+    """Export at the 1920x1080 resolution used by the current osu! setup."""
+    canvas.resize(OUTPUT_SIZE, Image.Resampling.LANCZOS).save(OUT / filename, **kwargs)
 
 
 def label(draw, text, xy, size, fill=WHITE, anchor="la", bold=False, stroke=0):
@@ -98,7 +104,7 @@ def menu_preview():
     cursor = asset("cursor@2x.png", (94, 94))
     paste_center(canvas, cursor, (1345, 350))
     label(draw, "CUSTOM SKIN", (1515, 820), 20, GREEN, anchor="ra", bold=True)
-    canvas.save(OUT / "menu.png", optimize=True)
+    save_preview(canvas, "menu.png", optimize=True)
 
 
 def hit_object(canvas, center, number, scale=1.0, approach=True):
@@ -120,7 +126,8 @@ def hit_object(canvas, center, number, scale=1.0, approach=True):
 
 
 def gameplay_preview():
-    canvas = background(12, 0.26)
+    # Current gameplay setting uses 100% background dim and no blur.
+    canvas = Image.new("RGBA", SIZE, (0, 0, 0, 255))
     draw = ImageDraw.Draw(canvas)
     draw.rounded_rectangle((125, 185, 1475, 845), 18, fill=(1, 8, 14, 145), outline=(255, 255, 255, 28), width=2)
     header(canvas, "osu!standard", "gameplay mockup • Focus preset")
@@ -132,34 +139,43 @@ def gameplay_preview():
     for i, point in enumerate(points, 1):
         hit_object(canvas, point, i, 1.0 if i < 4 else 0.9, approach=i in (1, 4))
 
-    cursor = asset("cursor@2x.png", (104, 104))
+    # Gameplay cursor size is 0.69 in the current local configuration.
+    cursor = asset("cursor@2x.png", (72, 72))
     paste_center(canvas, cursor, (704, 500))
     for radius, alpha in [(55, 100), (76, 55), (98, 25)]:
         draw.ellipse((704-radius, 500-radius, 704+radius, 500+radius), outline=(0, 186, 255, alpha), width=4)
 
-    draw.rounded_rectangle((128, 198, 500, 262), 10, fill=(1, 8, 14, 210))
-    label(draw, "00128450", (155, 230), 31, WHITE, anchor="lm", bold=True)
-    label(draw, "98.72%", (1448, 226), 29, GREEN, anchor="rm", bold=True)
+    draw.rounded_rectangle((1125, 190, 1455, 270), 10, fill=(1, 8, 14, 210))
+    label(draw, "00128450", (1440, 220), 31, WHITE, anchor="rm", bold=True)
+    label(draw, "98.72%", (1440, 252), 23, GREEN, anchor="rm", bold=True)
     label(draw, "127x", (177, 793), 43, CYAN, bold=True)
-    draw.rounded_rectangle((520, 808, 1080, 824), 8, fill=(255, 255, 255, 40))
-    draw.rounded_rectangle((650, 808, 1015, 824), 8, fill=CYAN)
+    # The exported HUD places the hit-error meter vertically at centre-left.
+    draw.rounded_rectangle((138, 390, 154, 700), 8, fill=(255, 255, 255, 40))
+    draw.rectangle((138, 455, 154, 535), fill="#ffdc55")
+    draw.rectangle((138, 535, 154, 615), fill=CYAN)
+    draw.rectangle((138, 615, 154, 655), fill=GREEN)
+    draw.rectangle((132, 568, 160, 574), fill=WHITE)
     label(draw, "STANDARD", (1445, 802), 18, "#aebac4", anchor="ra", bold=True)
-    canvas.save(OUT / "gameplay-standard.png", optimize=True)
+    save_preview(canvas, "gameplay-standard.png", optimize=True)
 
 
 def mania_preview():
-    canvas = background(12, 0.23)
+    # Current gameplay setting uses 100% background dim and no blur.
+    canvas = Image.new("RGBA", SIZE, (0, 0, 0, 255))
     draw = ImageDraw.Draw(canvas)
     header(canvas, "osu!mania", "4K gameplay mockup • configured for 1–7 keys")
 
-    left, top, right, bottom = 470, 178, 1130, 845
+    # Four 52px legacy columns scale to roughly 468px at 1080p.
+    left, top, right, bottom = 605, 168, 995, 852
     draw.rectangle((left, top, right, bottom), fill=(0, 0, 0, 215), outline=CYAN, width=2)
     lane_width = (right - left) // 4
     for i in range(1, 4):
         x = left + i * lane_width
         draw.line((x, top, x, bottom), fill=(255, 255, 255, 40), width=2)
-    draw.rectangle((left, 785, right, 795), fill=GREEN)
-    draw.rectangle((left, 795, right, bottom), fill=(0, 186, 255, 45))
+    stage = asset("mania-stage-bottom.png").resize((right - left, 54), Image.Resampling.LANCZOS)
+    canvas.alpha_composite(stage, (left, 798))
+    draw.rectangle((left, 825, right, 835), fill=GREEN)
+    draw.rectangle((left, 835, right, bottom), fill=(0, 186, 255, 45))
 
     note_files = ["mania-note1.png", "mania-note2.png", "mania-note2.png", "mania-note1.png"]
     positions = [(0, 350), (1, 265), (2, 490), (3, 315), (1, 610), (3, 665), (0, 560)]
@@ -169,19 +185,18 @@ def mania_preview():
     for lane in range(4):
         key_color = CYAN if lane in (1, 2) else WHITE
         draw.rounded_rectangle(
-            (left + lane * lane_width + 9, 803, left + (lane + 1) * lane_width - 9, 836),
+            (left + lane * lane_width + 9, 836, left + (lane + 1) * lane_width - 9, 849),
             5,
             fill=key_color,
         )
 
-    label(draw, "SCORE", (190, 300), 18, "#aebac4", bold=True)
-    label(draw, "0247186", (190, 338), 43, WHITE, bold=True)
-    label(draw, "COMBO", (190, 450), 18, "#aebac4", bold=True)
-    label(draw, "348x", (190, 493), 48, CYAN, bold=True)
-    label(draw, "300", (1305, 430), 75, GREEN, anchor="mm", bold=True)
-    label(draw, "99.14%", (1305, 505), 28, WHITE, anchor="mm", bold=True)
-    label(draw, "4 KEYS", (1305, 650), 23, CYAN, anchor="mm", bold=True)
-    canvas.save(OUT / "gameplay-mania.png", optimize=True)
+    # Global score and accuracy counters are anchored at the top-right.
+    label(draw, "0247186", (1445, 225), 42, WHITE, anchor="ra", bold=True)
+    label(draw, "99.14%", (1445, 276), 25, GREEN, anchor="ra", bold=True)
+    label(draw, "348x", (800, 425), 44, CYAN, anchor="mm", bold=True)
+    label(draw, "300", (800, 650), 64, GREEN, anchor="mm", bold=True)
+    label(draw, "4 KEYS", (1445, 802), 18, "#aebac4", anchor="ra", bold=True)
+    save_preview(canvas, "gameplay-mania.png", optimize=True)
 
 
 def results_preview():
@@ -207,7 +222,7 @@ def results_preview():
         y = 395 + (index // 2) * 105
         label(draw, name, (x, y), 18, colour, bold=True)
         label(draw, value, (x + 175, y + 2), 34, WHITE, anchor="rm", bold=True)
-    canvas.save(OUT / "results.png", optimize=True)
+    save_preview(canvas, "results.png", optimize=True)
 
 
 def overview():
@@ -215,8 +230,8 @@ def overview():
     draw = ImageDraw.Draw(canvas)
     previews = [
         ("menu.png", "MENU"),
-        ("gameplay-standard.png", "OSU!STANDARD"),
         ("gameplay-mania.png", "OSU!MANIA"),
+        ("gameplay-standard.png", "OSU!STANDARD"),
         ("results.png", "RESULTS"),
     ]
     for index, (filename, title) in enumerate(previews):
@@ -226,7 +241,7 @@ def overview():
         canvas.paste(image, (x, y))
         draw.rectangle((x, y + 382, x + 770, y + 433), fill=(2, 9, 15))
         label(draw, title, (x + 24, y + 408), 19, GREEN if index % 2 == 0 else CYAN, anchor="lm", bold=True)
-    canvas.save(OUT / "overview.jpg", quality=91, optimize=True)
+    save_preview(canvas, "overview.jpg", quality=91, optimize=True)
 
 
 def main():
