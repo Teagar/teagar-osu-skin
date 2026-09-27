@@ -1,1 +1,3 @@
 *.osk
+__pycache__/
+*.pyc
