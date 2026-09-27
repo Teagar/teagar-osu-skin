@@ -97,7 +97,7 @@ def menu_preview():
     draw.ellipse((397, 327, 687, 617), fill="#dd36a5", outline="#ffffff", width=9)
     draw.ellipse((414, 344, 670, 600), outline=(255, 255, 255, 65), width=4)
     label(draw, "osu!", (542, 474), 94, WHITE, anchor="mm", bold=True)
-    label(draw, "TEAGAR'S 2.0", (542, 585), 15, WHITE, anchor="mm", bold=True)
+    label(draw, "TEAGAR'S 2.1", (542, 585), 15, WHITE, anchor="mm", bold=True)
 
     cursor = asset("cursor@2x.png", (62, 62))
     paste_center(canvas, cursor, (790, 465))

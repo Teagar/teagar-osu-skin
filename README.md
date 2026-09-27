@@ -1,8 +1,8 @@
-# Teagar's 2.0
+# Teagar's 2.1
 
 My personal custom skin for [osu!](https://osu.ppy.sh/), with assets and configurations for osu!standard and osu!mania.
 
-![Teagar's 2.0 showcase](docs/showcase/overview.jpg)
+![Teagar's 2.1 showcase](docs/showcase/overview.jpg)
 
 ## Preview
 
@@ -30,9 +30,9 @@ The gameplay mockups follow the current local osu!lazer visual configuration:
 
 ## Installation
 
-1. Download `Teagars-2.0.osk` from the [latest release](https://github.com/Teagar/teagar-osu-skin/releases/latest).
+1. Download `Teagars-2.1.osk` from the [latest release](https://github.com/Teagar/teagar-osu-skin/releases/latest).
 2. Open the downloaded file with osu!.
-3. Select **Teagar's 2.0 [Teagar]** in the skin settings.
+3. Select **Teagar's 2.1 [Teagar]** in the skin settings.
 
 ## Manual installation
 
@@ -47,9 +47,17 @@ Clone or download this repository and copy the contents of [`skin/`](skin/) into
 ## Details
 
 - Creator: Teagar
-- Skin name: Teagar's 2.0
+- Skin name: Teagar's 2.1
+- Maintenance revision: v2.1
 - Primary colour: `#00BAFF`
 - Accent colour: `#00FF90`
+
+### Compatibility
+
+The v2.1 maintenance pass normalises metadata and asset references, provides valid silent audio files, and keeps legacy `skin.ini` compatibility alongside osu!lazer HUD metadata.
+The 4K layout uses compact competitive-style circles and static ring receptors in the skin's symmetric white–blue–blue–white palette.
+Mania hold trails use the colour of their corresponding notes at 69% opacity and rectangular ends; in 4K, their narrower profile keeps the circular heads distinct.
+Mania hit lighting is fully disabled, including normal notes, long notes, and continuous key-press lighting.
 
 ## Regenerating the showcase
 
