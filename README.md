@@ -6,7 +6,7 @@ My personal custom skin for [osu!](https://osu.ppy.sh/), with assets and configu
 
 ## Preview
 
-The images below are presentation mockups composed from the actual assets included in the skin.
+The images below are presentation mockups composed from the actual assets included in the skin. Their geometry and HUD placement were measured from the running osu!lazer client at 1920×1080.
 
 | Main menu | osu!mania |
 |:---:|:---:|
@@ -22,9 +22,10 @@ The gameplay mockups follow the current local osu!lazer visual configuration:
 
 - 1920×1080 fullscreen display at approximately 144 Hz
 - osu!mania as the selected ruleset
+- Current osu!mania preview reproduced in its observed 7K layout
 - 100% gameplay background dim with no blur
 - HUD always visible, with score and accuracy at the top-right
-- Gameplay leaderboard and key overlay disabled
+- Gameplay leaderboard disabled, with the custom key counter visible at the right
 - 0.69 gameplay cursor size in osu!standard
 
 ## Installation
@@ -35,7 +36,13 @@ The gameplay mockups follow the current local osu!lazer visual configuration:
 
 ## Manual installation
 
-Clone or download this repository and copy its contents into a folder under the osu! `Skins` directory.
+Clone or download this repository and copy the contents of [`skin/`](skin/) into a folder under the osu! `Skins` directory.
+
+## Repository structure
+
+- [`skin/`](skin/) — complete skin source, ready for manual installation
+- [`docs/showcase/`](docs/showcase/) — visual previews used in this README
+- [`tools/`](tools/) — scripts used to generate the showcase
 
 ## Details
 

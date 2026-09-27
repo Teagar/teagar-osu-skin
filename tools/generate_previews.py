@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SKIN = ROOT / "skin"
 OUT = ROOT / "docs" / "showcase"
 SIZE = (1600, 900)
 OUTPUT_SIZE = (1920, 1080)
@@ -21,7 +22,7 @@ def font(size: int, bold: bool = False):
 
 
 def asset(name: str, size=None):
-    image = Image.open(ROOT / name).convert("RGBA")
+    image = Image.open(SKIN / name).convert("RGBA")
     if size:
         image.thumbnail(size, Image.Resampling.LANCZOS)
     return image
@@ -39,7 +40,7 @@ def cover(image: Image.Image, size=SIZE):
 
 
 def background(blur=5, darkness=0.42):
-    image = cover(Image.open(ROOT / "menu-background.jpg").convert("RGB"))
+    image = cover(Image.open(SKIN / "menu-background.jpg").convert("RGB"))
     image = image.filter(ImageFilter.GaussianBlur(blur))
     image = ImageEnhance.Brightness(image).enhance(darkness).convert("RGBA")
     image.alpha_composite(Image.new("RGBA", SIZE, (2, 8, 14, 55)))
@@ -69,41 +70,39 @@ def label(draw, text, xy, size, fill=WHITE, anchor="la", bold=False, stroke=0):
     )
 
 
-def header(canvas, section, subtitle):
-    draw = ImageDraw.Draw(canvas)
-    draw.rounded_rectangle((55, 45, 485, 142), 16, fill=(4, 12, 20, 220), outline=CYAN, width=2)
-    label(draw, "TEAGAR'S 2.0", (82, 73), 31, GREEN, bold=True)
-    label(draw, section.upper(), (82, 113), 18, WHITE, bold=True)
-    label(draw, subtitle, (1540, 70), 18, "#b7c3cd", anchor="ra")
-    draw.line((55, 162, 1545, 162), fill=(0, 186, 255, 110), width=2)
-
-
 def menu_preview():
-    canvas = background(2, 0.7)
+    # Reproduce osu!lazer's current main-menu geometry, while keeping the
+    # background shipped by the skin instead of exposing the last beatmap.
+    canvas = background(0, 0.78)
     draw = ImageDraw.Draw(canvas)
-    canvas.alpha_composite(Image.new("RGBA", SIZE, (0, 8, 14, 85)))
-    header(canvas, "Main menu", "blueberry backdrop • cyan + neon green")
+    draw.rectangle((0, 0, 1600, 47), fill=(22, 22, 22, 245))
+    for x in (34, 98, 155, 202, 249, 296):
+        draw.ellipse((x - 13, 10, x + 13, 36), outline=WHITE, width=2)
+    label(draw, "TEAGAR", (1365, 24), 16, WHITE, anchor="rm")
+    label(draw, "01:12:35", (1515, 24), 14, WHITE, anchor="rm")
 
-    draw.ellipse((160, 230, 610, 680), fill=(1, 10, 17, 225), outline=CYAN, width=8)
-    draw.ellipse((188, 258, 582, 652), outline=GREEN, width=3)
-    label(draw, "osu!", (385, 430), 116, WHITE, anchor="mm", bold=True)
-    label(draw, "TEAGAR", (385, 545), 25, GREEN, anchor="mm", bold=True)
+    ribbon_y1, ribbon_y2 = 417, 529
+    draw.rectangle((0, ribbon_y1, 1600, ribbon_y2), fill=(17, 18, 21, 235))
+    sections = [
+        (0, 423, "SETTINGS", "#277ea8"),
+        (673, 920, "PLAY", "#d42ca0"),
+        (920, 1075, "EDIT", "#d42ca0"),
+        (1075, 1235, "BROWSE", "#d42ca0"),
+        (1235, 1375, "EXIT", "#d42ca0"),
+    ]
+    for left, right, text, colour in sections:
+        draw.polygon(((left, ribbon_y1), (right - 15, ribbon_y1), (right, ribbon_y2), (left, ribbon_y2)), fill=colour)
+        label(draw, text, ((left + right) // 2, 473), 19, WHITE, anchor="mm", bold=True)
 
-    menu_asset = asset("menu-button-background@2x.png")
-    menu_asset = menu_asset.resize((720, 108), Image.Resampling.LANCZOS)
-    for index, (name, accent) in enumerate(
-        [("PLAY", GREEN), ("EDIT", CYAN), ("OPTIONS", "#ffffff"), ("EXIT", "#8b99a5")]
-    ):
-        y = 262 + index * 122
-        canvas.alpha_composite(menu_asset, (720, y))
-        draw.rectangle((720, y, 728, y + 108), fill=accent)
-        label(draw, name, (770, y + 54), 35, accent, anchor="lm", bold=True)
-        label(draw, ["Choose a beatmap", "Create and refine", "Tune your game", "See you next time"][index],
-              (1010, y + 56), 18, "#aebac4", anchor="lm")
+    draw.ellipse((397, 327, 687, 617), fill="#dd36a5", outline="#ffffff", width=9)
+    draw.ellipse((414, 344, 670, 600), outline=(255, 255, 255, 65), width=4)
+    label(draw, "osu!", (542, 474), 94, WHITE, anchor="mm", bold=True)
+    label(draw, "TEAGAR'S 2.0", (542, 585), 15, WHITE, anchor="mm", bold=True)
 
-    cursor = asset("cursor@2x.png", (94, 94))
-    paste_center(canvas, cursor, (1345, 350))
-    label(draw, "CUSTOM SKIN", (1515, 820), 20, GREEN, anchor="ra", bold=True)
+    cursor = asset("cursor@2x.png", (62, 62))
+    paste_center(canvas, cursor, (790, 465))
+    label(draw, "osu!lazer", (26, 866), 15, WHITE)
+    label(draw, "skin preview", (1574, 866), 14, "#c9d1d8", anchor="ra")
     save_preview(canvas, "menu.png", optimize=True)
 
 
@@ -129,33 +128,29 @@ def gameplay_preview():
     # Current gameplay setting uses 100% background dim and no blur.
     canvas = Image.new("RGBA", SIZE, (0, 0, 0, 255))
     draw = ImageDraw.Draw(canvas)
-    draw.rounded_rectangle((125, 185, 1475, 845), 18, fill=(1, 8, 14, 145), outline=(255, 255, 255, 28), width=2)
-    header(canvas, "osu!standard", "gameplay mockup • Focus preset")
-
-    points = [(420, 610), (650, 460), (900, 555), (1160, 365)]
+    points = [(635, 335), (930, 490), (1200, 300), (1030, 660)]
     for first, second in zip(points, points[1:]):
-        draw.line((first, second), fill=(255, 255, 255, 80), width=7)
-        draw.line((first, second), fill=(0, 186, 255, 125), width=3)
+        draw.line((first, second), fill=(255, 255, 255, 50), width=5)
     for i, point in enumerate(points, 1):
-        hit_object(canvas, point, i, 1.0 if i < 4 else 0.9, approach=i in (1, 4))
+        hit_object(canvas, point, i, 1.15, approach=i in (1, 2, 4))
 
     # Gameplay cursor size is 0.69 in the current local configuration.
-    cursor = asset("cursor@2x.png", (72, 72))
-    paste_center(canvas, cursor, (704, 500))
-    for radius, alpha in [(55, 100), (76, 55), (98, 25)]:
-        draw.ellipse((704-radius, 500-radius, 704+radius, 500+radius), outline=(0, 186, 255, alpha), width=4)
+    cursor = asset("cursor@2x.png", (52, 52))
+    paste_center(canvas, cursor, (1015, 392))
 
-    draw.rounded_rectangle((1125, 190, 1455, 270), 10, fill=(1, 8, 14, 210))
-    label(draw, "00128450", (1440, 220), 31, WHITE, anchor="rm", bold=True)
-    label(draw, "98.72%", (1440, 252), 23, GREEN, anchor="rm", bold=True)
-    label(draw, "127x", (177, 793), 43, CYAN, bold=True)
-    # The exported HUD places the hit-error meter vertically at centre-left.
-    draw.rounded_rectangle((138, 390, 154, 700), 8, fill=(255, 255, 255, 40))
-    draw.rectangle((138, 455, 154, 535), fill="#ffdc55")
-    draw.rectangle((138, 535, 154, 615), fill=CYAN)
-    draw.rectangle((138, 615, 154, 655), fill=GREEN)
-    draw.rectangle((132, 568, 160, 574), fill=WHITE)
-    label(draw, "STANDARD", (1445, 802), 18, "#aebac4", anchor="ra", bold=True)
+    label(draw, "0013586", (1580, 35), 47, WHITE, anchor="ra", bold=True)
+    label(draw, "99.72%", (1580, 78), 27, WHITE, anchor="ra", bold=True)
+    label(draw, "431x", (22, 865), 58, WHITE, anchor="ls", bold=True, stroke=2)
+    label(draw, "72", (1580, 870), 53, WHITE, anchor="rs", bold=True)
+    for index, value in enumerate((13, 12, 13)):
+        y = 408 + index * 56
+        draw.line((1595, y - 18, 1595, y + 30), fill=CYAN, width=3)
+        label(draw, str(value), (1578, y), 17, WHITE, anchor="rm", bold=True)
+    # Horizontal hit-error meter observed at the bottom-centre.
+    draw.rectangle((680, 882, 920, 887), fill="#ffdc00")
+    draw.rectangle((920, 882, 990, 887), fill=GREEN)
+    draw.rectangle((990, 882, 1060, 887), fill=CYAN)
+    draw.rectangle((799, 874, 802, 894), fill=WHITE)
     save_preview(canvas, "gameplay-standard.png", optimize=True)
 
 
@@ -163,46 +158,42 @@ def mania_preview():
     # Current gameplay setting uses 100% background dim and no blur.
     canvas = Image.new("RGBA", SIZE, (0, 0, 0, 255))
     draw = ImageDraw.Draw(canvas)
-    header(canvas, "osu!mania", "4K gameplay mockup • configured for 1–7 keys")
 
-    # Four 52px legacy columns scale to roughly 468px at 1080p.
-    left, top, right, bottom = 605, 168, 995, 852
-    draw.rectangle((left, top, right, bottom), fill=(0, 0, 0, 215), outline=CYAN, width=2)
-    lane_width = (right - left) // 4
-    for i in range(1, 4):
-        x = left + i * lane_width
-        draw.line((x, top, x, bottom), fill=(255, 255, 255, 40), width=2)
-    stage = asset("mania-stage-bottom.png").resize((right - left, 54), Image.Resampling.LANCZOS)
-    canvas.alpha_composite(stage, (left, 798))
-    draw.rectangle((left, 825, right, 835), fill=GREEN)
-    draw.rectangle((left, 835, right, bottom), fill=(0, 186, 255, 45))
+    # Exact 7K geometry observed in-game at 1920x1080, mapped to this canvas.
+    left, right, hit_y = 537, 1063, 707
+    lane_width = (right - left) / 7
+    stage = asset("mania-stage-bottom.png").resize((right - left, 25), Image.Resampling.LANCZOS)
+    canvas.alpha_composite(stage, (left, 817))
+    draw.rectangle((left, hit_y, right, hit_y + 2), fill=(0, 255, 0, 255))
 
-    note_files = ["mania-note1.png", "mania-note2.png", "mania-note2.png", "mania-note1.png"]
-    positions = [(0, 350), (1, 265), (2, 490), (3, 315), (1, 610), (3, 665), (0, 560)]
-    for lane, y in positions:
-        note = asset(note_files[lane]).resize((lane_width - 20, 42), Image.Resampling.LANCZOS)
-        canvas.alpha_composite(note, (left + lane * lane_width + 10, y))
-    for lane in range(4):
-        key_color = CYAN if lane in (1, 2) else WHITE
-        draw.rounded_rectangle(
-            (left + lane * lane_width + 9, 836, left + (lane + 1) * lane_width - 9, 849),
-            5,
-            fill=key_color,
-        )
+    note_files = ["mania-note1.png", "mania-note2.png", "mania-note1.png", "mania-noteS.png",
+                  "mania-note1.png", "mania-note2.png", "mania-note1.png"]
+    notes = [(0, 205, 0), (1, 370, 120), (2, 125, 0), (3, 535, 190),
+             (4, 300, 0), (5, 105, 135), (6, 455, 0), (0, 595, 0),
+             (2, 500, 0), (4, 610, 0), (6, 250, 0)]
+    for lane, y, hold in notes:
+        x = round(left + lane * lane_width)
+        width = round(lane_width)
+        if hold:
+            draw.rounded_rectangle((x + 7, y, x + width - 7, y + hold + 31), 25,
+                                   fill=(183, 183, 183, 255))
+        note = asset(note_files[lane]).resize((width, 44), Image.Resampling.LANCZOS)
+        canvas.alpha_composite(note, (x, y + hold))
 
-    # Global score and accuracy counters are anchored at the top-right.
-    label(draw, "0247186", (1445, 225), 42, WHITE, anchor="ra", bold=True)
-    label(draw, "99.14%", (1445, 276), 25, GREEN, anchor="ra", bold=True)
-    label(draw, "348x", (800, 425), 44, CYAN, anchor="mm", bold=True)
-    label(draw, "300", (800, 650), 64, GREEN, anchor="mm", bold=True)
-    label(draw, "4 KEYS", (1445, 802), 18, "#aebac4", anchor="ra", bold=True)
+    label(draw, "0247186", (1583, 35), 47, WHITE, anchor="ra", bold=True)
+    label(draw, "99.140%", (1583, 78), 27, WHITE, anchor="ra", bold=True)
+    label(draw, "348x", (800, 420), 42, WHITE, anchor="mm", bold=True)
+    label(draw, "300", (800, 535), 54, GREEN, anchor="mm", bold=True)
+    draw.rectangle((680, 882, 920, 887), fill="#ffdc00")
+    draw.rectangle((920, 882, 990, 887), fill=GREEN)
+    draw.rectangle((990, 882, 1060, 887), fill=CYAN)
+    draw.rectangle((799, 874, 802, 894), fill=WHITE)
     save_preview(canvas, "gameplay-mania.png", optimize=True)
 
 
 def results_preview():
     canvas = background(8, 0.35)
     draw = ImageDraw.Draw(canvas)
-    header(canvas, "Results", "ranking screen mockup • custom grades and counters")
 
     panel = asset("ranking-panel@2x.png")
     panel = panel.resize((870, 705), Image.Resampling.LANCZOS)
